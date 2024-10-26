@@ -5,8 +5,7 @@ import 'theme.dart'; // Import the theme file
 class Screen2 extends StatelessWidget {
   final double _fontSize = 20.0; // Article text font size
   final Color _fontColor = AppColors.gray100; // Text color
-  final double marginTop =
-      50.0; // Variable to control top margin for the heading
+  final double marginTop = 50.0; // Variable to control top margin for the heading
 
   @override
   Widget build(BuildContext context) {
@@ -26,21 +25,16 @@ class Screen2 extends StatelessWidget {
               ),
             ),
           ),
-          FutureBuilder<DocumentSnapshot>(
-            future: FirebaseFirestore.instance
-                .collection('articles')
-                .doc('articleId') // Replace with your actual document ID
-                .get(),
+          FutureBuilder<QuerySnapshot>(
+            future: FirebaseFirestore.instance.collection('articles').get(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
               }
-              if (!snapshot.hasData ||
-                  snapshot.data == null ||
-                  !snapshot.data!.exists) {
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                 return Center(
                   child: Text(
-                    'No article found',
+                    'No articles found',
                     style: TextStyle(
                       fontFamily: AppFonts.pregular,
                       color: _fontColor,
@@ -50,39 +44,48 @@ class Screen2 extends StatelessWidget {
                 );
               }
 
-              String heading = snapshot.data!['heading'] ?? 'No Heading';
-              String content = snapshot.data!['text'] ?? 'No Content';
-
               return Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: marginTop), // Apply top margin
-                    Text(
-                      heading,
-                      style: TextStyle(
-                        fontFamily: AppFonts.pextrabold,
-                        color: AppColors.white,
-                        fontSize: 28,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 20),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Text(
-                          content,
-                          style: TextStyle(
-                            fontFamily: AppFonts.pregular,
-                            color: _fontColor,
-                            fontSize: _fontSize,
+                child: ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    DocumentSnapshot article = snapshot.data!.docs[index];
+                    String heading = article['heading'] ?? 'No Heading';
+                    String content = article['text'] ?? 'No Content';
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            heading,
+                            style: TextStyle(
+                              fontFamily: AppFonts.pextrabold,
+                              color: AppColors.secondary,
+                              fontSize: 28,
+                            ),
+                            textAlign: TextAlign.left,
                           ),
-                          textAlign: TextAlign.left,
-                        ),
+                          SizedBox(height: 8),
+                          Text(
+                            content,
+                            style: TextStyle(
+                              fontFamily: AppFonts.pregular,
+                              color: _fontColor,
+                              fontSize: _fontSize,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                          SizedBox(height: 16), // Space after content
+                          Divider( // Divider widget acts as a break line
+                            color: AppColors.gray100, // Adjust the color as needed
+                            thickness: 1, // Thickness of the line
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               );
             },
